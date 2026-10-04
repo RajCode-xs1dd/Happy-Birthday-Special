@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A Special Gallery | Happy Birthday</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,500;0,700;1,600&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-dark: #050505;
+            --surface: #121212;
+            --neon-pink: #ec4899;
+            --neon-purple: #a855f7;
+            --neon-cyan: #06b6d4;
+        }
+
+        html {
+            overflow-x: clip;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-dark);
+            color: #ffffff;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        h1, h2, .font-serif {
+            font-family: 'Playfair Display', serif;
+        }
+
+        /* Custom Scrollbar for a premium feel */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg-dark);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #2a2a30;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--neon-pink);
+            box-shadow: 0 0 10px var(--neon-pink);
+        }
+
+        .masonry-grid {
+            column-count: 2;
+            column-gap: 1rem;
+            padding: 1rem;
+            width: 100%;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        /* Responsive column adjustments */
+        @media (min-width: 640px) { .masonry-grid { column-count: 3; } }
+        @media (min-width: 1024px) { .masonry-grid { column-count: 4; column-gap: 1.5rem; } }
+        @media (min-width: 1536px) { .masonry-grid { column-count: 5; column-gap: 2rem; } }
+
+        .masonry-item {
+            break-inside: avoid;
+            margin-bottom: 1rem;
+            position: relative;
+            border-radius: 1rem;
+            overflow: hidden;
+            background: var(--surface);
+            opacity: 0; /* Hidden initially for staggered animation */
+            cursor: pointer;
+        }
+
+        @media (min-width: 1024px) {
+            .masonry-item { margin-bottom: 1.5rem; }
+        }
+
+        /* Glowing Border on Hover */
+        .masonry-item::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 1rem;
+            border: 2px solid transparent;
+            transition: all 0.4s ease;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .masonry-item:hover::after {
+            border-color: rgba(236, 72, 153, 0.7);
+            box-shadow: inset 0 0 20px rgba(236, 72, 153, 0.4), 
+                              0 0 25px rgba(168, 85, 247, 0.5);
+        }
+
+        .masonry-img {
+            width: 100%;
+            height: auto;
+            display: block;
+            transition: transform 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94), filter 0.4s ease;
+            filter: brightness(0.85) contrast(1.1);
+        }
+
+        .masonry-item:hover .masonry-img {
+            transform: scale(1.08);
+            filter: brightness(1.1) contrast(1.1);
+        }
+
+        @keyframes slideUpFade {
+            0% {
+                opacity: 0;
+                transform: translateY(40px) scale(0.95);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .glow-text {
+            background: linear-gradient(to right, #ec4899, #a855f7, #06b6d4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: pulse-glow 3s infinite alternate;
+        }
+        
+        .rajcode-glow {
+            color: #fff;
+            text-shadow: 0 0 5px #ec4899, 0 0 15px #ec4899, 0 0 30px #a855f7;
+            font-weight: 600;
+            letter-spacing: 1px;
+            animation: flicker 4s infinite alternate;
+        }
+
+        @keyframes pulse-glow {
+            0% { filter: drop-shadow(0 0 8px rgba(236, 72, 153, 0.4)); }
+            100% { filter: drop-shadow(0 0 15px rgba(6, 182, 212, 0.6)); }
+        }
+
+        @keyframes flicker {
+            0%, 18%, 22%, 25%, 53%, 57%, 100% { text-shadow: 0 0 5px #ec4899, 0 0 15px #ec4899, 0 0 30px #a855f7; }
+            20%, 24%, 55% { text-shadow: none; }
+        }
+
+        #lightbox {
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            overflow: hidden;
+            overscroll-behavior: none;
+            touch-action: pan-y pinch-zoom;
+            padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right)) max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #closeLightbox {
+            position: absolute;
+            z-index: 60;
+            top: -52px;
+            right: 0;
+            width: 52px;
+            height: 52px;
+            background-color: rgba(15, 15, 15, 0.94);
+            color: #ffffff;
+            border: 2px solid rgba(255, 255, 255, 0.9);
+            touch-action: manipulation;
+        }
+
+        #lightbox .relative {
+            min-width: 0;
+            min-height: 0;
+            width: fit-content;
+            height: fit-content;
+            max-width: 100%;
+            max-height: calc(100dvh - 7rem);
+        }
+
+        #lightboxImage {
+            display: block;
+            max-width: 100%;
+            max-height: calc(100dvh - 7rem);
+            width: auto;
+            height: auto;
+            object-fit: contain;
+        }
+
+        #musicToggle {
+            position: relative;
+            z-index: 40;
+            display: grid;
+            flex: none;
+            width: 48px;
+            height: 48px;
+            margin-left: auto;
+            place-items: center;
+            border: 1px solid rgba(236, 72, 153, 0.65);
+            border-radius: 50%;
+            background: rgba(18, 18, 18, 0.94);
+            color: #ffffff;
+            cursor: pointer;
+            touch-action: manipulation;
+            transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+        }
+
+        #musicToggle:hover,
+        #musicToggle:focus-visible {
+            border-color: var(--neon-pink);
+            background: #2a1722;
+            transform: scale(1.06);
+        }
+
+        #musicToggle:focus-visible {
+            outline: 2px solid #ffffff;
+            outline-offset: 3px;
+        }
+
+        #musicToggle svg {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
+        }
+
+        #musicToggle .stop-icon,
+        #musicToggle.is-playing .music-icon {
+            display: none;
+        }
+
+        #musicToggle.is-playing .stop-icon {
+            display: block;
+        }
+        
+        .lightbox-image-glow {
+            box-shadow: 0 0 50px rgba(168, 85, 247, 0.4), 
+                        0 0 100px rgba(6, 182, 212, 0.2);
+        }
+    </style>
+</head>
+<body class="antialiased min-h-screen flex flex-col">
+
+    <header class="w-full pt-6 px-6 lg:px-12 flex items-center justify-between z-40 relative">
+        <a href="index.html" class="group flex items-center gap-3 text-white/70 hover:text-white transition-all duration-300 relative z-10">
+            <div class="flex items-center justify-center w-12 h-12 rounded-full bg-white/5 backdrop-blur-md group-hover:bg-white/10 transition-all border border-white/10 group-hover:border-pink-500/50 shadow-[0_0_0_transparent] group-hover:shadow-[0_0_20px_rgba(236,72,153,0.4)]">
+                <svg class="w-5 h-5 transform group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                </svg>
+            </div>
+            <span class="font-medium tracking-widest hidden sm:block uppercase text-xs text-white/50 group-hover:text-pink-400 transition-colors">Back to Start</span>
+        </a>
+        <button id="musicToggle" type="button" title="Play music" aria-label="Play music" aria-pressed="false">
+            <svg class="music-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M9 18V5l12-2v13M9 8l12-2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                <ellipse cx="6" cy="18" rx="3" ry="2.5"></ellipse>
+                <ellipse cx="18" cy="16" rx="3" ry="2.5"></ellipse>
+            </svg>
+            <svg class="stop-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="6" y="6" width="12" height="12" rx="2"></rect>
+            </svg>
+        </button>
+    </header>
+
+    <section class="max-w-4xl mx-auto px-6 pt-10 pb-16 text-center relative z-10">
+        <!-- Decorative subtle background glow -->
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-pink-500/10 blur-[100px] rounded-full pointer-events-none"></div>
+        
+        <h1 class="text-4xl md:text-6xl font-bold mb-6 glow-text italic pb-2">
+            Your Beautiful Smiles
+        </h1>
+        
+        <div class="relative inline-block">
+            <p class="text-white/80 text-lg md:text-xl leading-relaxed font-light md:px-12 backdrop-blur-sm rounded-2xl">
+                A gallery dedicated entirely to you. I might not have photos of us together just yet, 
+                so I carefully collected my favorite moments you've shared—from your statuses, social media, 
+                and everywhere in between. Every single one is special to me.
+            </p>
+            <!-- Decorative quotes -->
+            <span class="absolute -top-6 -left-4 md:-left-8 text-6xl text-pink-500/20 font-serif">"</span>
+            <span class="absolute -bottom-10 -right-4 md:-right-8 text-6xl text-cyan-500/20 font-serif">"</span>
+        </div>
+    </section>
+
+    <main class="flex-grow pb-24 relative z-10 px-2 sm:px-4">
+        <div id="galleryContainer" class="masonry-grid">
+            <!-- Images will be injected here via JavaScript -->
+        </div>
+    </main>
+
+    <footer class="w-full border-t border-white/5 bg-[#050505]/80 backdrop-blur-md py-12 px-6 relative z-10">
+        <div class="max-w-3xl mx-auto text-center flex flex-col items-center gap-6">
+            <p class="font-serif italic text-2xl md:text-3xl text-white/90">
+                "Wishing you a birthday as incredibly beautiful as you are. ✨"
+            </p>
+            
+            <div class="w-16 h-[1px] bg-gradient-to-r from-transparent via-pink-500/50 to-transparent my-2"></div>
+            
+            <p class="text-sm md:text-base text-white/60 tracking-wide font-light">
+                Made with <span class="animate-pulse inline-block text-red-500 mx-1">❤️</span> by <span class="rajcode-glow ml-1">RajCode</span> only for you
+            </p>
+        </div>
+    </footer>
+
+    <audio id="galleryMusic" src="soft-piano.mp3" preload="none" loop></audio>
+
+    <div id="lightbox" class="fixed inset-0 z-50 bg-[#020202]/95 flex items-center justify-center opacity-0 pointer-events-none p-4 sm:p-10">
+        
+        <!-- Loading spinner -->
+        <div id="lightboxLoader" class="absolute inset-0 flex items-center justify-center hidden">
+            <div class="w-14 h-14 border-4 border-white/10 border-t-pink-500 rounded-full animate-spin shadow-[0_0_20px_rgba(236,72,153,0.5)]"></div>
+        </div>
+
+        <!-- Image Container -->
+        <div class="relative flex items-center justify-center w-full h-full max-w-[95vw] max-h-[90vh]">
+            <button id="closeLightbox" type="button" aria-label="Close full-screen image" class="absolute top-6 right-6 sm:top-10 sm:right-10 w-12 h-12 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/20 text-white/70 hover:text-white transition-all hover:scale-110 focus:outline-none z-50 border border-white/10 hover:border-pink-500 shadow-[0_0_15px_rgba(0,0,0,0.5)]">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+            <img id="lightboxImage" src="" alt="Beautiful Memory" class="max-w-full max-h-full object-contain rounded-xl lightbox-image-glow scale-95 opacity-0 transition-all duration-500">
+        </div>
+    </div>
+
+    <script>
+        const TOTAL_IMAGES = 67;
+        const FOLDER_PATH = 'gallery/'; 
+        const EXTENSION = '.jpg';
+        
+        const galleryContainer = document.getElementById('galleryContainer');
+        const lightbox = document.getElementById('lightbox');
+        const lightboxImg = document.getElementById('lightboxImage');
+        const lightboxLoader = document.getElementById('lightboxLoader');
+        const closeBtn = document.getElementById('closeLightbox');
+        const musicToggle = document.getElementById('musicToggle');
+        const galleryMusic = document.getElementById('galleryMusic');
+
+        galleryMusic.volume = 0.05;
+
+        function syncMusicButton() {
+            const isPlaying = !galleryMusic.paused;
+            const label = isPlaying ? 'Stop music' : 'Play music';
+            musicToggle.classList.toggle('is-playing', isPlaying);
+            musicToggle.setAttribute('aria-pressed', String(isPlaying));
+            musicToggle.setAttribute('aria-label', label);
+            musicToggle.title = label;
+        }
+
+        musicToggle.addEventListener('click', async () => {
+            if (galleryMusic.paused) {
+                try {
+                    await galleryMusic.play();
+                } catch {
+                    syncMusicButton();
+                }
+            } else {
+                galleryMusic.pause();
+                galleryMusic.currentTime = 0;
+            }
+        });
+
+        galleryMusic.addEventListener('play', syncMusicButton);
+        galleryMusic.addEventListener('pause', syncMusicButton);
+
+        function buildGallery() {
+            const fragment = document.createDocumentFragment();
+            
+            // Varied heights to make the masonry layout look natural with placeholders
+            const placeholderHeights = [400, 550, 350, 600, 450, 700, 500, 380, 650];
+
+            for (let i = 1; i <= TOTAL_IMAGES; i++) {
+                const item = document.createElement('div');
+                item.className = 'masonry-item';
+                
+                // Staggered entry animation based on index
+                const delay = (i % 12) * 0.1;
+                item.style.animation = `slideUpFade 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards ${delay}s`;
+
+                const img = document.createElement('img');
+                const intendedSrc = `${FOLDER_PATH}image${i}${EXTENSION}`;
+                
+                img.className = 'masonry-img';
+                img.src = intendedSrc;
+                img.alt = `Beautiful Memory ${i}`;
+                img.loading = 'lazy'; // crucial for 60 images
+
+                // FALLBACK LOGIC: If the local image isn't found, load a beautiful placeholder
+                const randomH = placeholderHeights[i % placeholderHeights.length];
+                img.onerror = function() {
+                    this.onerror = null; // Prevent infinite loops
+                    // Using picsum to fetch high-quality, abstract/nature placeholders
+                    this.src = `https://picsum.photos/600/${randomH}?random=${i}&blur=1`;
+                };
+
+                // Add click listener to open full screen
+                item.onclick = () => openLightbox(img.src);
+
+                item.appendChild(img);
+                fragment.appendChild(item);
+            }
+
+            galleryContainer.appendChild(fragment);
+        }
+
+        function openLightbox(src) {
+            // Show lightbox background
+            lightbox.classList.remove('opacity-0', 'pointer-events-none');
+            lightbox.classList.add('opacity-100', 'pointer-events-auto');
+            document.body.style.overflow = 'hidden'; // Prevent background scrolling
+            
+            // Reset image state
+            lightboxImg.classList.remove('scale-100', 'opacity-100');
+            lightboxImg.classList.add('scale-95', 'opacity-0');
+            lightboxLoader.classList.remove('hidden');
+
+            // Preload the image so it doesn't pop in half-loaded
+            const newImg = new Image();
+            newImg.onload = () => {
+                lightboxImg.src = src;
+                lightboxLoader.classList.add('hidden');
+                
+                // Small delay to ensure CSS transition triggers properly
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        lightboxImg.classList.remove('scale-95', 'opacity-0');
+                        lightboxImg.classList.add('scale-100', 'opacity-100');
+                    });
+                });
+            };
+            
+            // Handle loading error in lightbox just in case
+            newImg.onerror = () => {
+                lightboxLoader.classList.add('hidden');
+                lightboxImg.src = src; 
+                lightboxImg.classList.remove('scale-95', 'opacity-0');
+                lightboxImg.classList.add('scale-100', 'opacity-100');
+            }
+            
+            newImg.src = src;
+        }
+
+        function closeLightboxHandler() {
+            // Fade out
+            lightbox.classList.remove('opacity-100', 'pointer-events-auto');
+            lightbox.classList.add('opacity-0', 'pointer-events-none');
+            document.body.style.overflow = ''; 
+            
+            lightboxImg.classList.remove('scale-100', 'opacity-100');
+            lightboxImg.classList.add('scale-95', 'opacity-0');
+            
+            // Clear source after fade out completes
+            setTimeout(() => {
+                lightboxImg.src = '';
+            }, 400);
+        }
+
+        closeBtn.addEventListener('click', (event) => {
+            event.stopPropagation();
+            closeLightboxHandler();
+        });
+        
+        // Close if clicking outside the image
+        lightbox.addEventListener('click', (e) => {
+            if (e.target === lightbox || e.target.closest('.relative') === lightbox.querySelector('.relative')) {
+                if(e.target !== lightboxImg) {
+                    closeLightboxHandler();
+                }
+            }
+        });
+
+        // Close on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && lightbox.classList.contains('opacity-100')) {
+                closeLightboxHandler();
+            }
+        });
+
+        // Boot up the gallery when HTML is ready
+        window.addEventListener('DOMContentLoaded', buildGallery);
+    </script>
+</body>
+</html>
